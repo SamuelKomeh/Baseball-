@@ -1,2 +1,2 @@
-# Baseball-
+# Baseball
 Baseball prediction
