@@ -1,0 +1,724 @@
+---
+title: "CS5801 Coursework Template Proforma"
+author: '2037903'
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+version: 1
+---
+
+
+#The aim of this essay is to undertake an assesssment on two baseball team which is BOS and NYN 
+
+
+# Loading of our packages
+```{r}
+library(ggplot2)
+library(dplyr)
+library(dlookr)
+library(e1071)
+library(eeptools)
+```
+
+
+
+## 1.1 Subset the data into the specific dataset allocated
+
+1.1 Answer
+
+
+#Code to load our main dataset file 
+
+```{r}
+load(file = "CS5801_data.rda")
+```
+
+#code to load our subset been given
+```{r}
+my.2teams.df <- subset(CS5801.data, teamID.x=="BOS" | teamID.x=="NYN")
+```
+#We can also view our dataset using the view function
+```{r}
+View(my.2teams.df)
+```
+
+#Code to sort our dataframe in an alphabetical order
+```{r}
+sort(my.2teams.df$playerID, decreasing = FALSE)
+```
+
+
+
+
+
+## 1.2 Data quality analysis
+ 
+#We will check the columns that are in the data.
+
+```{r}
+names(my.2teams.df)
+```
+
+#The sapply(ds, class) will return the names and class of each value within the data frame
+```{r}
+sapply(my.2teams.df, class)
+```
+
+#Str function is to give more details on the columns.
+
+```{r}
+str(my.2teams.df)
+```
+
+
+#We will also run the summary command to check our mean,median, 1st quantile and 3rd variable
+
+```{r}
+summary(my.2teams.df)
+```
+
+
+Hit.ind: We noticed from our data that hit.ind was been interpreted as numeric even though it is a binary in our data, but it should have been interpreted as a factor.
+
+#Code to Check the hit.ind to see whether truely is numeric
+```{r}
+table(my.2teams.df$hit.ind)
+```
+
+#With the sapply function we saw that hit.ind was truley interpreted as numeric
+
+```{r}
+sapply(my.2teams.df, class)
+```
+
+
+We will use the as.factor function to correct the hit.ind variable  and also re-run the data set using the sapply and summary function.
+
+#The as. factor function
+```{r}
+my.2teams.df$hit.ind<-as.factor((my.2teams.df$hit.ind))
+```
+
+#The sapply function and summary function
+```{r}
+sapply(my.2teams.df,class)
+summary(my.2teams.df)
+```
+
+
+
+#Checking for accuracy in R
+R: We also saw that the column R have a negative values which should not be so.From our metadata, number of runs should be zero or more but in our dataset we saw a negative value in it, which it should not be so.We will replace it with 0 other than deleting all the rows.By deleting the rows it will affect our data, the plot and also lose data in our dataset which will make us biased. Further more number of runs was replaced by 0 to make our graph look a bit better.
+
+
+#Our RBI column
+RBI: From our observation using the summary function we saw that column RBI has some negative values which it should not be so. With reference to our metadata pdf document it says number of Runs Batted can be 0 or
+more.With this reference we will replace it by 0 and run our graph again to see whether it will be okay in 1.3
+
+
+#Our TeamID column
+
+TeamID: From the view function TeamID seems to be okay.
+
+
+#Our AGE column
+Age:Some of the age seems to be incorrectly calculated so we will calculate it again using the age_cal function.
+
+
+#Our Height column
+
+HEIGHT:The mean height of a baseball player is approximately 74inches (Wearefanatics.com, 2020).Secondly looking at our data playerID suchmjj01(952), he has a very small minimum height which is 42inches and also skewed our data to right.We will replace it with a mean value to make our graph look better. By deleting it we might lose a valuable data.
+
+
+#Our weight column
+
+WEIGHT:The average weight for a baseball player is about 207 lbs (Wearefanatics.com, 2020). Secondly, the lightest baseball person in history was Eddie Gaedel who weighed 65 pounds.Looking at our data we saw that the lightest person weighed 40 pounds, making our graph to skewed to the right.We replaced it with the mean to correct the mistake.Moreover our mean average is closely in line with the research we made which says the average weight for a baseball player is about 207 pounds.
+
+
+
+#Our carrer length column
+Career length was skewed to the left which makes the graph looks inappropriate. We will then replace it by a mean because one of the career length variable has an extreme value of 38. Therefore any value which has a value greater than 30 will be replaced by a mean.
+
+
+
+#The dlookr function
+
+We will use the dlookr function to provide a comprehensive data quality report.
+The dlookr function will be used to perform a data diagnosis,generate exploratory data analysis report and impute missing values and outliers, resolve skewed data, and binarize continuous variable into categorical variables and also generates report in 1.3.
+
+
+
+#Checking for any issues with the whole data
+```{r}
+dlookr::diagnose(my.2teams.df)
+```
+
+
+#Checking for any issues with our numeric variables
+```{r}
+diagnose_numeric(my.2teams.df)
+```
+
+#Checking for any issues with our category variables
+
+```{r}
+diagnose_category(my.2teams.df)
+```
+
+#Visual representation of any outlier and summary of the data
+```{r}
+dlookr::plot_outlier(my.2teams.df)
+summary(my.2teams.df)
+```
+We will further address some issues and write a code to correct the mistake and plot and analysis the data again in 1.3. For the age which is incorrect, negative values, issues with the height and weight such as under weight, over weight, under height and over height. All issues will be addressed in our data cleaning
+
+
+## 1.3 Data cleaning  
+
+Answer:
+
+We noticed from our data analysis in 1.2 that hit.ind was been interpreted as numeric even though it is a binary in our data, but it should have been interpreted as a factor. Therefore we change it to a factor using the code below
+
+```{r}
+my.2teams.df$hit.ind<-as.factor((my.2teams.df$hit.ind))
+```
+
+
+We will reference from our data analysis in 1.2 on what we will do in 1.3
+
+#replacing outliers having extreme value with mean value
+
+#If height is less than 50 replace it with the mean
+```{r}
+my.2teams.df$height[my.2teams.df$height < 50] <- 72.71
+```
+
+```{r}
+summary(my.2teams.df)
+```
+
+#If career length is greater than 30 replace it with the mean
+```{r}
+my.2teams.df$career.length[my.2teams.df$career.length > 30] <- 5.4707
+```
+
+#If weight is less than 81 replaces it with the mean
+
+```{r}
+my.2teams.df$weight[my.2teams.df$weight < 81] <- 209.6
+```
+
+#Replacing negative values with 0
+
+#If R thats is number of runs is less than zero replace it with zero
+
+```{r}
+my.2teams.df$R[my.2teams.df$R < 0] <- 0
+```
+
+#If RBI is less than zero replaces it with zero
+```{r}
+my.2teams.df$RBI[my.2teams.df$RBI < 0] <- 0
+
+summary(my.2teams.df)
+```
+
+
+#code to drop the levels from teamID.x
+```{r}
+my.2teams.df$teamID.x<- droplevels(my.2teams.df$teamID.x)
+```
+
+#Code to re-run after dropping the levels
+```{r}
+str(my.2teams.df)
+summary(my.2teams.df)
+```
+
+#code to check Na
+checking for not available in the dataframe
+```{r}
+is.na(my.2teams.df)
+```
+
+There was no Na(Not available) from our check
+
+
+We also saw some duplicates in our dataset but we will run a code to confirm it first.
+
+#code to check which row is duplicated in our dataset
+```{r}
+which(duplicated(my.2teams.df$playerID))
+```
+
+We saw that there have been duplication in our data with same values.In this case we will delete the duplicated values and keep the original rows
+We will run the code to remove duplicated values in the row.
+
+```{r}
+my.2teams.df <- my.2teams.df[!duplicated(my.2teams.df$playerID),]
+```
+
+
+#Code to check and calculate the age and birthdate in our dataframe
+The age was not corresponding to the birthdate so we corrected it.Moreover because of our metadata says that it was a 2015 year data so will set the date to 2015
+
+```{r}
+my.2teams.df$age <- eeptools::age_calc(dob = as.Date(my.2teams.df$birthDate),as.Date("2015-12-31"),units = 'years')
+```
+
+
+
+This generate a diagnostic report on our dataframe
+
+```{r}
+#Installation of miktex application is required in addition to run the diagnose report in a form of pdf format. Miktex can be downloaded at https://miktex.org/download
+
+diagnose_report(my.2teams.df)
+summary(my.2teams.df)
+```
+
+
+# 2. Exploratory Data Analysis (EDA)
+
+# 2.1 EDA plan
+  
+I will first explore the graph of a continuous variables and categorical variables,plot some categorical and continuous variable against each other to see whether they are related and also check which columns from continuous variables look normally distributed.
+Finally i will analysis the graph and check for any outlier.
+
+
+
+## 2.2 EDA and summary of results  
+
+
+#Beginning with the univariate plotting
+ 
+#For numerical
+
+```{r}
+ggplot(my.2teams.df, aes(x=G))+geom_histogram(fill="blue") +labs(title="Players by the number of Games")
+
+ggplot(my.2teams.df, aes(x=R))+geom_histogram(fill="blue") +labs(title="Players by the number of Runs")
+
+ggplot(my.2teams.df, aes(x=AB))+geom_histogram(fill="blue") +labs(title="Number of bats by a player")
+
+ggplot(my.2teams.df, aes(x=RBI))+geom_histogram(fill="blue") +labs(title="Number of Runs batted in by a player")
+
+ggplot(my.2teams.df, aes(x=weight))+geom_histogram(fill="blue") +labs(title="Weight of the player")
+
+ggplot(my.2teams.df, aes(x=height))+geom_histogram(fill="blue") +labs(title="Height of the Player")
+
+ggplot(my.2teams.df, aes(x=salary))+geom_histogram(fill="blue") +labs(title="Salary in take of a player")
+
+ggplot(my.2teams.df, aes(x=career.length))+geom_histogram(fill="blue") +labs(title="career length of a player")
+
+ggplot(my.2teams.df, aes(x=age))+geom_histogram(fill="blue") +labs(title="Age of a player")
+```
+
+
+# for categorical
+
+```{r}
+
+ggplot(my.2teams.df, aes(x=teamID.x))+geom_bar(fill="blue") +labs(title="Number of Players")
+
+ggplot(my.2teams.df, aes(x=hit.ind))+geom_bar(fill="blue") +labs(title="At least 1 or 0 hits")
+
+ggplot(my.2teams.df, aes(x=bats))+geom_bar(fill="blue") +labs(title="Batsmen")
+
+
+```
+
+
+#Bivariate graphical presentation
+
+#Comparing one categorical against one numerical
+
+```{r}
+ggplot(my.2teams.df, aes(x=teamID.x, y=salary)) + geom_boxplot() +
+  theme_classic() + ggtitle("Teams and their various salary")
+
+ggplot(my.2teams.df, aes(x=bats, y=salary)) + geom_boxplot() +
+  theme_classic() + ggtitle("Batsmen and their salary")
+
+ggplot(my.2teams.df, aes(x=hit.ind, y=salary)) + geom_boxplot() +
+  theme_classic() + ggtitle("Number of hit indicator vrs salary")
+
+ggplot(my.2teams.df, aes(x=hit.ind, y=G)) + geom_boxplot() +
+  theme_classic() + ggtitle("Number of hit indicator vrs Games")
+```
+
+#Comparing one Numerical against numerical
+
+```{r}
+ggplot(my.2teams.df,aes(x = career.length,y = salary)) + geom_point(color= "steelblue") + labs(title = "Number of Career length vrs Salary") + geom_smooth(method = "lm")
+
+ggplot(my.2teams.df,aes(x = age,y = salary)) + geom_point(color= "steelblue") + labs(title = "Player Age vrs Salary") + geom_smooth(method = "lm")
+
+ggplot(my.2teams.df,aes(x = height,y = weight)) + geom_point(color= "steelblue") + labs(title = "Height vrs weight of the players") + geom_smooth(method = "lm")
+
+ggplot(my.2teams.df,aes(x = RBI,y = salary)) + geom_point(color= "steelblue") + labs(title = "Number of runs batted in vrs salary") + geom_smooth(method = "lm")
+
+ggplot(my.2teams.df,aes(x = G,y = salary)) + geom_point(color= "steelblue") + labs(title = "Numebr of Games vrs Salary") + geom_smooth(method = "lm")
+
+ggplot(my.2teams.df,aes(x = R,y = salary)) + geom_point(color= "steelblue") + labs(title = "Number of runs vrs Salary") + geom_smooth(method = "lm")
+```
+
+
+#comparing one categorical against categorical
+
+We will use the stacked bar chart to plot a categorical variable against another categorical variable
+
+```{r}
+ggplot(my.2teams.df, aes(x = hit.ind,fill = bats)) +geom_bar(position = "stack") + labs(title = "hit indicator based on the type of batsmen")
+
+```
+
+
+
+
+#Multivariate graphical presentation
+
+we will use the grouping representation to visualize our data
+
+```{r}
+#color represent the player teamid
+ggplot(my.2teams.df, aes(x = career.length,y = salary,color=teamID.x)) + geom_point() +
+labs(title = "Players salary by teamID and career length")
+
+
+#color represent the player teamid
+ggplot(my.2teams.df, aes(x = G,y = R,color=teamID.x)) +geom_point() +
+labs(title = "Players teams vrs the number of games played and runs")
+
+
+#color represent the player bats
+ggplot(my.2teams.df, aes(x = career.length,y =salary,color=bats)) +geom_point() +
+labs(title = "player's salary by bats and career length")
+
+#color represent the player teamid
+ggplot(my.2teams.df, aes(x = age,y =salary,color=teamID.x)) +geom_point() +
+labs(title = "player's salary by teamid and age")
+
+#color represent the player bats
+ggplot(my.2teams.df, aes(x = age,y =salary,color=bats)) +geom_point() +
+labs(title = "player's salary by bats and Age")
+
+#color represent the player bats
+ggplot(my.2teams.df, aes(x = height,y =salary,color=bats)) +geom_point() +
+labs(title = "player's salary by bats and height")
+
+#color represent the player hit.ind
+ggplot(my.2teams.df, aes(x = weight,y =salary,color=hit.ind)) +geom_point() +
+labs(title = "player's salary by hit.ind and wieght")
+
+#color represent the player hit.ind
+ggplot(my.2teams.df, aes(x = height,y =salary,color=hit.ind)) +geom_point() +
+labs(title = "player's salary by hit.ind and height")
+
+
+#color represent the player bats
+ggplot(my.2teams.df, aes(x = AB,y =salary,color=bats)) +geom_point() +
+labs(title = "player's salary by At bat and bats")
+
+#color represent the player teamID
+ggplot(my.2teams.df, aes(x = height,y =salary,color=teamID.x)) +geom_point() +
+labs(title = "player's salary by teamid and height")
+
+#color represent the player teamID
+ggplot(my.2teams.df, aes(x = G,y =salary,color=teamID.x)) +geom_point() +
+labs(title = "player's salary by Teamid and Games")
+
+#color represent the player teamID
+ggplot(my.2teams.df, aes(x = G,y =salary,color=teamID.x)) +geom_point() +
+labs(title = "player's salary by Teamid and Games")
+
+#color represent the player hit.ind
+ggplot(my.2teams.df, aes(x = R,y =salary,color=hit.ind)) +geom_point() +
+labs(title = "player's salary by hit.ind and Runs")
+
+
+
+#color represent the player TeamId
+ggplot(my.2teams.df, aes(x = R,y =salary,color=teamID.x)) +geom_point() +
+labs(title = "player's salary by teamID and Runs")
+
+
+# (color represents teamid, shape represents hit indicator)
+ggplot(my.2teams.df,aes(x = weight,y = height,color = teamID.x,shape = hit.ind)) + geom_point(size = 3, alpha = .6) + labs(title = "Number of hit indicator made by a team player with their weight and height")
+
+# (color represents teamid, shape represents hit indicator)
+ggplot(my.2teams.df,aes(x = weight,y = age,color = teamID.x,shape = bats)) + geom_point(size = 3, alpha = .6) + labs(title = "Team player vrs their age, weight and type of batsmen in the team")
+
+
+```
+
+
+
+## 2.3 Additional insights and issues
+
+Answer.
+
+#Univariate findings
+-All graphs looks quite well
+-Age looks well
+-height also looks well
+-Career.length also look okay
+
+#Bivariate findings
+
+-Salary increases with experience which is career.length. However, there seems to be a little amount of salary at the right end of the players with significant experience which leads to earning lower salaries. But in all the graph quite good and all outliers will be addressed in our furthur findings.
+-Salary also increases with age.
+
+#Multivariate findings
+-Age seems to be okay with salary. More findings will take place in our model
+
+
+
+# 3. Modelling
+
+## 3.1 Build a model for player salary
+
+
+To build our model i will first model salary with bats using Anova to see whether is good, but if is not then will use multiple regression to model salary with only the continuous variables and analysis it. After that then will model the continuous variables to categorical variables for further analysis
+
+Anova
+
+#We will build an ANOVA model for salary with bats which is our explanatory variable or factor.
+ 
+
+```{r}
+summary(aov(my.2teams.df$salary~my.2teams.df$bats))
+```
+The p value does not seem to be significant
+
+#Lets check the diagnostic plot
+
+```{r}
+plot(aov(my.2teams.df$salary~my.2teams.df$bats))
+```
+
+The diagnostics for this model do not point to major issues, but there are some outliers (59, 55, 69) that can be considered for further investigation.
+
+
+We also want to consider the effect of each bats has on the salary which is our dependent variable
+
+```{r}
+summary.lm(aov(my.2teams.df$salary~my.2teams.df$bats))
+```
+
+This helps us to know what effect each batting strategy, that is "B" "R"
+"L". The coefficients shows the difference in other bat strategy. In this case players batting with their Left hand (L) have a lower average salary as compared to those batting with right(R). Those batting with right earns more than Left
+Moreover the f-statistics is not significant because the p-value is more than 0.05.Both the f-statistics and the $r^2$ are not significant.This model does not seem to be good.
+
+
+#Code to look at the mean as well
+
+```{r}
+aggregate(salary~bats, data=my.2teams.df, FUN="mean")
+```
+
+By looking at the mean of each of the bats above, we can see that the mean for players who bat with both hands is the same as the intercept, and by adding the coefficients from the summary.lm table to the players who bats with both hands,give us the two other means which is left and right
+
+#We can also analysis by joining two categories
+
+#we will treat players who bat with left hands and both hands as one
+```{r}
+my.2teams.df$Numbertwo.bats<-ifelse(my.2teams.df$bats=="R", "Right", "Both+Left")
+```
+
+Lets see what this new attribute looks like:
+
+```{r}
+table(my.2teams.df$Numbertwo.bats)
+```
+#Lets use Anova to model
+
+```{r}
+summary.lm(aov(my.2teams.df$salary~my.2teams.df$Numbertwo.bats))
+```
+
+
+
+By combining both hands, and also checking for the p value we can see that none is significant
+This has not been a good model we will consider using multiple regression with the step function for better modeling.
+
+
+#focusing only on our explanatory variable
+```{r}
+my.2teams.df1<-subset(my.2teams.df, select=c("salary", "H", "AB", "RBI", "weight",  "height", "G","R",
+                                   "career.length", "age") )
+pairs(my.2teams.df1)
+```
+
+```{r}
+cor(my.2teams.df1)
+```
+
+Some variables seen to have multi collinearity (highly correlated explanatory variables) such as Hits,Runs At.bats,Games and Runs Batted In.
+Moreover a few of the plots above point to potential for a linear relationships.
+
+
+
+#Use of continuous explanatory variable to build a good best fit model
+
+```{r}
+my.2teams.df1.lm<-lm(my.2teams.df1$salary~my.2teams.df1$G+my.2teams.df1$R+my.2teams.df1$H+my.2teams.df1$AB + my.2teams.df1$weight+my.2teams.df1$height+my.2teams.df1$career.length + my.2teams.df1$RBI+ my.2teams.df1$age)
+
+summary(my.2teams.df1.lm)
+```
+We have seen that our some of our variable looks significant and our f-test seems to tell us that our regression looks significant.
+
+We will use the step function () to achieve the minimal
+
+```{r}
+step(my.2teams.df1.lm)
+```
+We have the minimal adequate model,we discuss its findings and test its residuals
+
+```{r}
+mam.lm<-lm(formula = my.2teams.df1$salary ~ my.2teams.df1$AB + my.2teams.df1$career.length)
+
+summary(mam.lm)
+```
+From the minimal adequate model, career.length and At bats(AB) all seems to be significant 
+
+Next will be residuals should be scrutinised:
+
+```{r}
+plot(mam.lm)
+```
+The normal QQ looks quite good and is better compared to the first model which is the anova. We now have only two outlier which is(55,69) as compared to the previous mpdel where we had 3 outliers which was (55,59,65).
+
+
+
+## 3.2 Critique model using relevant diagnostics
+
+```{r}
+plot(mam.lm)
+```
+
+This model has acceptable goodness of fit.It also has $r^2$ which is acceptable and the F statistic is significant where p value is < 0.5.
+The QQ plot looks quite okay but with a few outlier is (55, and 69).Moreover we can conclude the multiple regression has a good fitted model as compared to Anova Model.We will furthur improve it. Career length is the most significant variable among the other explanatory variables when modeled with salary.
+
+
+
+## 3.3 Suggest improvements to your model
+
+We will therefore like to check for interaction with only the continuous significant variables on the impact with each other
+
+#code to check for interactions
+```{r}
+FitInteraction<-lm(salary~career.length + AB+career.length:AB, data = my.2teams.df1)
+summary(FitInteraction)
+```
+
+Here there is an interaction between career length and At bats.
+Therefore we can say that the number of times a player had the opportunity to bat a ball truely depends on his or her career length when salary is model with the continuous explanatory variables
+
+
+
+We will further like to model salary to include both continuous variable and categorical variables, in order to improve my model
+
+```{r}
+model.all.data.lm<-lm(my.2teams.df$salary~my.2teams.df$G+my.2teams.df$R+my.2teams.df$AB+my.2teams.df$RBI + my.2teams.df$weight+my.2teams.df$height+my.2teams.df$career.length + my.2teams.df$age+ my.2teams.df$H+my.2teams.df$teamID.x + my.2teams.df$bats+ my.2teams.df$hit.ind +my.2teams.df$birthDate)
+summary(model.all.data.lm)
+```
+
+Career length and teamID.xNYN looks significant here with this model as compared to the other one which consist of only the continuous variable.
+
+
+We will then use step function to achieve the minimal adequate model
+```{r}
+step(model.all.data.lm)
+```
+
+From the minimal adequate model only At bat(AB), career.lengTH and teamID.x was chosen, which comprises of both continuous and categorical variables,
+
+
+
+```{r}
+mam.lm2<-lm(formula = my.2teams.df$salary ~ my.2teams.df$AB + my.2teams.df$career.length + 
+    my.2teams.df$teamID.x)
+summary(mam.lm2)
+```
+
+```{r}
+plot(mam.lm2)
+```
+
+#Checking for interactions when the continuous and categorical variables are added together
+```{r}
+FitInteraction1<-lm(salary~career.length + AB+career.length:AB, data = my.2teams.df)
+summary(FitInteraction1)
+```
+
+Therefore we can say that the number of times a player had the opportunity to bat a ball truely depends on his or her career length when salary is model with the continuous explanatory variables and categorical variables
+Also there is an interaction between career length and At Bats
+
+#code to check interaction between team player NYN and career length
+```{r}
+FitInteraction2<-lm(salary~career.length + teamID.x+career.length:teamID.x, data = my.2teams.df)
+summary(FitInteraction2)
+```
+
+A significant interaction between two predicator variable tells as that the relationship between one predicator and the response variable depends on the level of the other predicator.Here it shows that there is an interaction between career length and that of team player NYN
+
+
+In conclusion
+The residual value looks good now, our At bats(AB),career.length and teamID.xNYN have a significant value.Moreover career.length has the most significant value as compared to the other variables.The QQ plot looks good but only for our two outliers which is (55, and 69). By including the categorical variable to the continuous variable we saw the career.length is th most significant variable when attached with the dependent variable which is salary. teamID.xNYN and At bats(AB) are also looks significant when attached to the dependent salary variable.In the nutshell multiple regression was the good fit model with both the continuous variable and the categorical variable added together.Multiple regression was the best model as compared to Anova and also modeling the multiple regression with both continuous variable and categorical variable with salary as the dependent variable has proved to be the best model.
+
+This model has a goodness of fit
+
+# 4. Extension work
+
+## 4.1 Model the likelihood of a player having scored a Hit (using the hit.ind variable provided).
+
+
+
+Our dependent variable hit.ind is binary therefore i will use logistic Regression.
+We will begin to model without including (RBI,R,H,AB) because they seem to be correlated to each other which is termed as collinearity.
+
+```{r}
+my.2teams.df.glm<-glm(my.2teams.df$hit.ind ~ my.2teams.df$weight+ my.2teams.df$height + my.2teams.df$G + my.2teams.df$salary + my.2teams.df$career.length + my.2teams.df$age + my.2teams.df$teamID.x + my.2teams.df$bats , family = "binomial", data = my.2teams.df)
+summary(my.2teams.df.glm)
+```
+
+Games looks significant here 
+
+#Step function for simplification
+```{r}
+step(my.2teams.df.glm)
+```
+
+
+#After the step function the approriate model suggested
+```{r}
+mam.glm<-glm(formula = my.2teams.df$hit.ind ~ my.2teams.df$height + my.2teams.df$G + 
+    my.2teams.df$salary + my.2teams.df$teamID.x, family = "binomial", 
+    data = my.2teams.df)
+summary(mam.glm)
+```
+
+#finding for our odd ratio of a player having scored a hit
+```{r}
+exp(coef(mam.glm))
+```
+Now we noticed that the odds of a player having scored a hit is increased by a factor of 1.045 for an increased in games played
+
+
+# References  
+
+Answer.
+
+Wearefanatics.com. (2020). [online] Available at: http://wearefanatics.com/baseball-players-shapes-sizes/#:~:text=The%20average%20weight%20of%20an
+
+Dlookr package (https://www.kaggle.com/mollywiener/dlookr-getting-started)
+https://cran.r-project.org/web/packages/dlookr/vignettes/diagonosis.html
+
+Dlookr package (https://www.kaggle.com/mollywiener/dlookr-getting-started)
+https://cran.r-project.org/web/packages/dlookr/vignettes/diagonosis.html
+
+R in Action, Data Analysis and graphics with R, Kabacoff (2015)
+
