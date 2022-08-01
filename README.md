@@ -1,2 +1,2 @@
 # Baseball
-Baseball prediction
+Baseball prediction using R programming language
